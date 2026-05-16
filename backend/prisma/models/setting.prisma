@@ -1,0 +1,10 @@
+model SiteSetting {
+    id    Int    @id @default(autoincrement()) @db.UnsignedInt
+    key   String @unique
+    value String @db.Text
+    label String
+
+    updatedAt DateTime @updatedAt
+
+    @@map("site_settings")
+}

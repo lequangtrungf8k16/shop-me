@@ -1,0 +1,31 @@
+model User {
+    id       Int     @id @default(autoincrement()) @db.UnsignedInt
+    fullName String
+    email    String  @unique
+    phone    String?
+    password String  @db.Text
+    role     Role    @default(USER)
+    isActive Boolean @default(true)
+
+    // Google OAuth
+    googleId String? @unique
+    avatar   String? @db.Text
+
+    orders          Order[]
+    reviews         Review[]
+    reactions       Reaction[]
+    comments        Comment[]
+    articles        Article[]
+    notifications   Notification[]
+    contactMessages ContactMessage[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@map("users")
+}
+
+enum Role {
+    USER
+    ADMIN
+}

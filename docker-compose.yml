@@ -1,0 +1,91 @@
+name: shop-me
+
+# Thiết lập mạng nội bộ cô lập hoàn toàn với bên ngoài
+networks:
+  shop-me-network:
+    driver: bridge
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: shop-me-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: "123456"
+      MYSQL_DATABASE: "shop-me"
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+    networks:
+      - shop-me-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p123456"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  redis:
+    image: redis:alpine
+    container_name: shop-me-redis
+    restart: always
+    volumes:
+      - ./data/redis:/data
+    networks:
+      - shop-me-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: shop-me-backend
+    restart: always
+    env_file: ./backend/.env
+    environment:
+      DATABASE_URL: "mysql://root:123456@mysql:3306/shop-me"
+      DATABASE_HOST: "mysql"
+      DATABASE_USER: "root"
+      DATABASE_PASSWORD: "123456"
+      DATABASE_NAME: "shop-me"
+      REDIS_URL: "redis://redis:6379"
+      ALLOWED_ORIGINS: "http://192.168.1.x:8080,http://localhost:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+        - ./data/backend_uploads:/app/uploads:rw
+    networks:
+          - shop-me-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: shop-me-frontend
+    restart: always
+    environment:
+      NEXT_PUBLIC_API_URL: "http://localhost:8080/api"
+      NEXT_PUBLIC_APP_NAME: "TECHNOLOGY"
+      INTERNAL_API_URL: "http://backend:5000/api"
+    depends_on:
+      - backend
+    volumes:
+      - ./data/frontend:/app/public/uploads:rw
+    networks:
+      - shop-me-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: shop-me-nginx
+    restart: always
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - shop-me-network

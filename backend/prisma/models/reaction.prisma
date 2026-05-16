@@ -1,0 +1,34 @@
+// Bảng reaction dùng chung cho product, article, comment
+// Mỗi user chỉ có 1 reaction / target — toggle giữa LIKE / DISLIKE
+model Reaction {
+    id   Int          @id @default(autoincrement()) @db.UnsignedInt
+    type ReactionType
+
+    userId Int  @db.UnsignedInt
+    user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    // Polymorphic: chỉ 1 trong 3 được set, 2 còn lại null
+    productId Int? @db.UnsignedInt
+    articleId Int? @db.UnsignedInt
+    commentId Int? @db.UnsignedInt
+
+    product Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+    article Article? @relation(fields: [articleId], references: [id], onDelete: Cascade)
+    comment Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+    createdAt DateTime @default(now())
+
+    // Unique: mỗi user chỉ react 1 lần / target
+    @@unique([userId, productId])
+    @@unique([userId, articleId])
+    @@unique([userId, commentId])
+    @@index([productId])
+    @@index([articleId])
+    @@index([commentId])
+    @@map("reactions")
+}
+
+enum ReactionType {
+    LIKE
+    DISLIKE
+}

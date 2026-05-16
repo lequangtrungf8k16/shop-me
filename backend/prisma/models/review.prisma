@@ -1,0 +1,20 @@
+// Đánh giá sản phẩm (mỗi user chỉ được review 1 lần / sản phẩm)
+model Review {
+    id      Int     @id @default(autoincrement()) @db.UnsignedInt
+    rating  Int // 1–5 sao
+    content String? @db.Text
+
+    userId    Int @db.UnsignedInt
+    productId Int @db.UnsignedInt
+
+    user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+    product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // Ràng buộc: 1 user chỉ review 1 lần / sản phẩm
+    @@unique([userId, productId])
+    @@index([productId])
+    @@map("reviews")
+}

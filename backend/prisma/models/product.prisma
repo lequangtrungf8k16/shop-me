@@ -1,0 +1,26 @@
+model Product {
+    id          Int     @id @default(autoincrement()) @db.UnsignedInt
+    name        String  @unique
+    description String?
+
+    slug String @unique
+
+    price         Decimal  @db.Decimal(10, 2)
+    priceDiscount Decimal? @db.Decimal(10, 2)
+    stock         Int      @default(0)
+    thumbnail     String?  @db.Text
+
+    categoryId Int         @db.UnsignedInt
+    category   Category    @relation(fields: [categoryId], references: [id])
+    orderItems OrderItem[]
+    reviews    Review[]
+    reactions  Reaction[]
+    comments   Comment[]
+
+    deletedAt DateTime?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@map("products")
+}

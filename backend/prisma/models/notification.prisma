@@ -1,0 +1,23 @@
+model Notification {
+    id       Int              @id @default(autoincrement()) @db.UnsignedInt
+    userId   Int              @db.UnsignedInt
+    user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+    type     NotificationType
+    title    String
+    message  String           @db.Text
+    isRead   Boolean          @default(false)
+    metadata Json?
+
+    createdAt DateTime @default(now())
+
+    @@index([userId, isRead])
+    @@map("notifications")
+}
+
+enum NotificationType {
+    ORDER_PLACED
+    ORDER_STATUS_CHANGED
+    COMMENT_REPLY
+    CONTACT_MESSAGE
+    SYSTEM
+}

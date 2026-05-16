@@ -1,0 +1,31 @@
+// Bình luận đa cấp dùng chung cho product và article
+// parentId = null → bình luận gốc; parentId = id → reply
+model Comment {
+    id      Int    @id @default(autoincrement()) @db.UnsignedInt
+    content String @db.Text
+
+    userId    Int  @db.UnsignedInt
+    productId Int? @db.UnsignedInt
+    articleId Int? @db.UnsignedInt
+
+    // Self-relation để tạo cây bình luận
+    parentId Int?      @db.UnsignedInt
+    parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+    replies  Comment[] @relation("CommentReplies")
+
+    user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+    product   Product?   @relation(fields: [productId], references: [id], onDelete: Cascade)
+    article   Article?   @relation(fields: [articleId], references: [id], onDelete: Cascade)
+    reactions Reaction[]
+
+    // Soft delete: giữ lại node để không phá cây reply
+    isDeleted Boolean @default(false)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([productId])
+    @@index([articleId])
+    @@index([parentId])
+    @@map("comments")
+}

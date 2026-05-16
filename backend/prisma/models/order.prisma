@@ -1,0 +1,42 @@
+model Order {
+    id              Int         @id @default(autoincrement()) @db.UnsignedInt
+    customerName    String
+    customerPhone   String
+    shippingAddress String      @db.Text
+    totalAmount     Decimal     @db.Decimal(10, 2)
+    status          OrderStatus @default(PENDING)
+    paymentMethod   String      @default("COD") // Hỗ trợ COD, VNPAY, MOMO...
+
+    userId Int?  @db.UnsignedInt
+    user   User? @relation(fields: [userId], references: [id])
+
+    orderItems OrderItem[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt()
+
+    @@map("orders")
+}
+
+model OrderItem {
+    id        Int @id @default(autoincrement()) @db.UnsignedInt
+    orderId   Int @db.UnsignedInt
+    productId Int @db.UnsignedInt
+    quantity  Int
+
+    price Decimal @db.Decimal(10, 2)
+
+    order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+    product Product @relation(fields: [productId], references: [id])
+
+    @@map("order_items")
+}
+
+// Enum trạng thái đơn hàng
+enum OrderStatus {
+    PENDING // Chờ xác nhận
+    PROCESSING // Đang đóng gói
+    SHIPPED // Đang giao hàng
+    DELIVERED // Đã giao thành công
+    CANCELLED // Đã hủy
+}

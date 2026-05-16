@@ -1,0 +1,19 @@
+model Category {
+    id Int @id @default(autoincrement()) @db.UnsignedInt
+
+    parentId Int?
+
+    name        String  @unique
+    description String?
+
+    slug String @unique
+
+    isActive Boolean @default(true)
+
+    products Product[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt()
+
+    @@map("categories")
+}

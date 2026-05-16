@@ -1,0 +1,26 @@
+// Bài viết tin tức công nghệ
+model Article {
+    id        Int     @id @default(autoincrement()) @db.UnsignedInt
+    title     String
+    slug      String  @unique
+    excerpt   String? @db.Text // Tóm tắt ngắn
+    content   String  @db.LongText // Nội dung HTML đầy đủ
+    thumbnail String? @db.Text
+
+    published Boolean @default(false)
+    views     Int     @default(0)
+
+    authorId Int  @db.UnsignedInt
+    author   User @relation(fields: [authorId], references: [id])
+
+    comments  Comment[]
+    reactions Reaction[]
+
+    deletedAt DateTime?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([published])
+    @@map("articles")
+}
