@@ -87,15 +87,21 @@ export default function CheckoutPage() {
          // Gọi API POST /api/orders — response trả về ApiResponse<Order>
          const res = await axiosInstance.post<
             unknown,
-            { data: { id: number } }
+            { data: { id: number; paymentUrl?: string } }
          >("/orders", payload);
 
          toast.success(
             "Đặt hàng thành công! Cảm ơn bạn đã mua sắm tại TECHNOLOGY.",
          );
          clearCart();
-         // Redirect về trang chi tiết đơn hàng thay vì trang chủ
-         router.push(`/orders/${(res as any).data?.id ?? ""}`);
+         
+         const paymentUrl = (res as any).data?.paymentUrl;
+         if (paymentUrl) {
+            window.location.href = paymentUrl;
+         } else {
+            // Redirect về trang chi tiết đơn hàng thay vì trang chủ
+            router.push(`/orders/${(res as any).data?.id ?? ""}`);
+         }
       } catch (error: unknown) {
          const msg =
             typeof error === "object" && error !== null && "message" in error

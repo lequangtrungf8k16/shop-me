@@ -6,6 +6,7 @@ model Order {
     totalAmount     Decimal     @db.Decimal(10, 2)
     status          OrderStatus @default(PENDING)
     paymentMethod   String      @default("COD") // Hỗ trợ COD, VNPAY, MOMO...
+    isPaid          Boolean     @default(false)
 
     userId Int?  @db.UnsignedInt
     user   User? @relation(fields: [userId], references: [id])

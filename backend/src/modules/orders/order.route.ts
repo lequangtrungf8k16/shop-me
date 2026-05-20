@@ -5,6 +5,9 @@ import { checkoutSchema } from "./order.schema";
 
 const router = Router();
 
+// VNPAY IPN webhook
+router.get("/vnpay/ipn", orderController.vnpayIpnController);
+
 // Tạo đơn hàng mới (Checkout)
 router.post(
    "/",
