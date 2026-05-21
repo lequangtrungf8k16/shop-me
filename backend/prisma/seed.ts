@@ -243,18 +243,22 @@ async function main() {
    const slugSet = new Set<string>();
    const productsToCreate = [];
 
-   for (let i = 0; i < 60; i++) {
+   // Generate exactly 1000 products
+   for (let i = 0; i < 1000; i++) {
       const cat = categories[Math.floor(Math.random() * categories.length)]!;
       const catData = categoryData[cat.slug] || categoryData["laptop-gaming"];
 
       // Lấy ngẫu nhiên tên thật từ danh sách thay vì dùng faker.commerce
       const baseName =
          catData.names[Math.floor(Math.random() * catData.names.length)];
-      const suffix = faker.string.alphanumeric(4).toUpperCase();
+      const suffix = faker.string.alphanumeric(6).toUpperCase();
       const productName = `${baseName} (Mã: ${suffix})`;
 
-      const slug = createSlug(productName);
-      if (slugSet.has(slug)) continue;
+      let slug = createSlug(productName);
+      let attempts = 0;
+      while (slugSet.has(slug)) {
+         slug = createSlug(`${productName}-${attempts++}`);
+      }
       slugSet.add(slug);
 
       const price = faker.number.int({ min: 500_000, max: 10_000_000 });
@@ -280,6 +284,7 @@ async function main() {
       });
    }
 
+   // Bulk insert to handle 1000 records safely
    const { count: productCount } = await prisma.product.createMany({
       data: productsToCreate,
       skipDuplicates: true,
