@@ -47,6 +47,7 @@ import cartRoutes from "./modules/cart/cart.route.js";
 import aiRoutes from "./modules/ai/ai.route.js";
 import notificationRoutes from "./modules/notifications/notification.route.js";
 import contactRoutes from "./modules/contact/contact.route.js";
+import uploadRoutes from "./modules/upload/upload.route.js";
 
 const app = express();
 const PORT = Number(envParsed.data.PORT);
@@ -76,6 +77,7 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/contact", contactRoutes);
+app.use("/api/upload", uploadRoutes);
 
 // Health Check cho Container Orchestration (Docker/Nginx)
 app.get("/health", (_req, res) => {

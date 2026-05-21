@@ -4,6 +4,7 @@ import "./globals.css";
 import { BackToTop } from "@/_components/layout/BackToTop";
 import { Toaster } from "sonner";
 import QueryProvider from "@/providers/query-provider";
+import SocketProvider from "@/_components/layout/SocketProvider";
 
 const beVietnamPro = localFont({
    src: [
@@ -44,6 +45,7 @@ export default function RootLayout({
       <html lang="vi" className={beVietnamPro.variable}>
          <body className="bg-background text-on-background font-sans antialiased overflow-x-hidden selection:bg-primary-container selection:text-on-primary-container">
             <QueryProvider>
+               <SocketProvider />
                {children}
                <BackToTop />
                <Toaster

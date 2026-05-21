@@ -1,6 +1,7 @@
 import { prisma } from "../../config/prisma";
 import { AppError } from "../../shared/errors/AppError";
 import type { CreateReviewInput } from "./review.schema";
+import { notifyAdmins } from "../notifications/notification.service";
 
 // Tạo hoặc cập nhật review (upsert — đã review thì update lại)
 export const upsertReview = async (userId: number, data: CreateReviewInput) => {
@@ -26,6 +27,14 @@ export const upsertReview = async (userId: number, data: CreateReviewInput) => {
       include: {
          user: { select: { id: true, fullName: true } },
       },
+   });
+
+   // Notify admins about the new review
+   notifyAdmins({
+      type: "NEW_REVIEW",
+      title: "Đánh giá mới",
+      message: `Sản phẩm "${product.name}" vừa nhận được đánh giá ${data.rating} sao từ ${review.user.fullName}.`,
+      metadata: { productId: data.productId, reviewId: review.id },
    });
 
    return review;

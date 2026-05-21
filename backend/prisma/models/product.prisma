@@ -9,6 +9,7 @@ model Product {
     priceDiscount Decimal? @db.Decimal(10, 2)
     stock         Int      @default(0)
     thumbnail     String?  @db.Text
+    images        Json     @default("[]")
 
     categoryId Int         @db.UnsignedInt
     category   Category    @relation(fields: [categoryId], references: [id])

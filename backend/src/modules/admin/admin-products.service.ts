@@ -9,6 +9,7 @@ export interface AdminProductInput {
    priceDiscount?: number | null;
    stock: number;
    thumbnail?: string;
+   images?: string[];
    categoryId: number;
 }
 
@@ -65,6 +66,7 @@ export const adminCreateProduct = async (data: AdminProductInput) => {
          priceDiscount: data.priceDiscount ?? null,
          stock: data.stock,
          thumbnail: data.thumbnail ?? null,
+         images: data.images ?? [],
          categoryId: data.categoryId,
       },
       include: { category: { select: { name: true } } },
@@ -93,6 +95,7 @@ export const adminUpdateProduct = async (
       updateData["priceDiscount"] = data.priceDiscount;
    if (data.stock !== undefined) updateData["stock"] = data.stock;
    if (data.thumbnail !== undefined) updateData["thumbnail"] = data.thumbnail;
+   if (data.images !== undefined) updateData["images"] = data.images;
    if (data.categoryId !== undefined)
       updateData["categoryId"] = data.categoryId;
 

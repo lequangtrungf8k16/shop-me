@@ -20,6 +20,7 @@ import AddToCartButton from "@/_components/product/AddToCartButton";
 import ReviewSection from "@/_components/review/ReviewSection";
 import CommentSection from "@/_components/comment/CommentSection";
 import ReactionButtons from "@/_components/reaction/ReactionButtons";
+import ImageGallery from "@/_components/product/ImageGallery";
 
 const API = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
@@ -117,41 +118,7 @@ export default async function ProductDetailPage(props: { params: Promise<{ slug:
          <section className="grid grid-cols-1 lg:grid-cols-12 gap-section-gap bg-surface-container-lowest p-gutter rounded-xl shadow-sm border border-surface-container-high">
             {/* Left: Gallery */}
             <div className="lg:col-span-7 flex flex-col gap-stack-default">
-               <div className="w-full aspect-4/3 bg-surface-container rounded-lg border border-surface-container-high overflow-hidden relative group flex items-center justify-center p-4">
-                  <Image
-                     src={product.thumbnail || "https://picsum.photos/800/600"}
-                     alt={product.name}
-                     fill
-                     className="object-contain transition-transform duration-700 group-hover:scale-105 p-4"
-                     sizes="(max-width: 1024px) 100vw, 60vw"
-                     priority
-                  />
-               </div>
-               <div className="grid grid-cols-4 gap-stack-default">
-                  {/* Giữ các thumbnail tĩnh để khớp thiết kế UI */}
-                  <div className="aspect-video relative bg-surface-container rounded border-2 border-primary cursor-pointer overflow-hidden">
-                     <Image
-                        src="https://picsum.photos/400/300?random=1"
-                        fill
-                        alt="Thumb 1"
-                        className="object-cover"
-                     />
-                  </div>
-                  <div className="aspect-video relative bg-surface-container rounded border border-surface-container-high cursor-pointer overflow-hidden hover:border-primary transition-colors">
-                     <Image
-                        src="https://picsum.photos/400/300?random=2"
-                        fill
-                        alt="Thumb 2"
-                        className="object-cover"
-                     />
-                  </div>
-                  <div className="aspect-video bg-surface-container rounded border border-surface-container-high cursor-pointer overflow-hidden hover:border-primary transition-colors flex items-center justify-center text-on-surface-variant">
-                     <span className="font-bold">360°</span>
-                  </div>
-                  <div className="aspect-video bg-surface-container rounded border border-surface-container-high cursor-pointer overflow-hidden hover:border-primary transition-colors flex items-center justify-center text-on-surface-variant">
-                     <span className="font-bold">Video</span>
-                  </div>
-               </div>
+               <ImageGallery thumbnail={product.thumbnail} images={product.images || []} productName={product.name} />
             </div>
 
             {/* Right: Purchase Info */}

@@ -12,6 +12,7 @@ import {
    ChevronRight,
    X,
    Loader2,
+   Image as ImageIcon
 } from "lucide-react";
 import { toast } from "sonner";
 import axiosInstance from "@/lib/axios";
@@ -24,6 +25,7 @@ interface AdminProduct {
    priceDiscount: string | null;
    stock: number;
    thumbnail: string | null;
+   images: string[];
    category: { id: number; name: string };
    _count: { reviews: number; orderItems: number };
    createdAt: string;
@@ -64,8 +66,48 @@ function ProductModal({
          : ("" as number | ""),
       stock: product?.stock ?? 0,
       thumbnail: product?.thumbnail ?? "",
+      images: product?.images ?? [],
       categoryId: product?.category.id ?? categories[0]?.id ?? 0,
    });
+
+   const [uploading, setUploading] = useState(false);
+
+   const uploadFile = async (e: React.ChangeEvent<HTMLInputElement>, isThumbnail: boolean, index?: number) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      
+      const formData = new FormData();
+      formData.append("image", file);
+      
+      setUploading(true);
+      try {
+         const res = await axiosInstance.post("/upload", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+         }) as any;
+         
+         const url = res.data?.data?.url;
+         if (url) {
+            // Because our uploads serve from the backend root, we need the full URL if frontend is separate, but we configured axios so it's fine? Wait.
+            // If the frontend is NextJS on port 3000, and image src is "/uploads/...", it will try to fetch from localhost:3000/uploads.
+            // We should prefix it with process.env.NEXT_PUBLIC_API_URL but removing /api.
+            // Let's create the full URL.
+            const apiBase = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/api").replace(/\/api\/?$/, "");
+            const fullUrl = `${apiBase}${url}`;
+
+            if (isThumbnail) {
+               set("thumbnail", fullUrl);
+            } else if (index !== undefined) {
+               updateImage(index, fullUrl);
+            }
+            toast.success("Tải ảnh thành công");
+         }
+      } catch (err) {
+         toast.error("Tải ảnh thất bại");
+      } finally {
+         setUploading(false);
+         e.target.value = ''; // Reset input
+      }
+   };
 
    const mutation = useMutation({
       mutationFn: () =>
@@ -82,9 +124,20 @@ function ProductModal({
 
    const set = (k: string, v: unknown) => setForm((f) => ({ ...f, [k]: v }));
 
+   const addImage = () => set("images", [...form.images, ""]);
+   const updateImage = (index: number, val: string) => {
+      const newImages = [...form.images];
+      newImages[index] = val;
+      set("images", newImages);
+   };
+   const removeImage = (index: number) => {
+      const newImages = form.images.filter((_, i) => i !== index);
+      set("images", newImages);
+   };
+
    return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-         <div className="bg-surface rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+         <div className="bg-surface rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between px-6 py-4 border-b border-surface-variant shrink-0">
                <h2 className="text-[16px] font-bold text-on-surface">
                   {isEdit ? "Sửa sản phẩm" : "Thêm sản phẩm"}
@@ -97,22 +150,99 @@ function ProductModal({
                </button>
             </div>
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-               {[
-                  { label: "Tên sản phẩm *", key: "name", type: "text" },
-                  { label: "URL Thumbnail", key: "thumbnail", type: "text" },
-               ].map(({ label, key, type }) => (
-                  <div key={key}>
+               <div>
+                  <label className="block text-[12px] font-semibold text-on-surface mb-1">
+                     Tên sản phẩm *
+                  </label>
+                  <input
+                     type="text"
+                     value={form.name}
+                     onChange={(e) => set("name", e.target.value)}
+                     className="w-full px-3 py-2 rounded-lg bg-surface-container border border-surface-variant text-[13px] text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                  />
+               </div>
+
+               {/* Thumbnail Section */}
+               <div className="flex gap-4">
+                  <div className="flex-1">
                      <label className="block text-[12px] font-semibold text-on-surface mb-1">
-                        {label}
+                        Ảnh đại diện (Thumbnail)
                      </label>
                      <input
-                        type={type}
-                        value={String(form[key as keyof typeof form])}
-                        onChange={(e) => set(key, e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg bg-surface-container border border-surface-variant text-[13px] text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => uploadFile(e, true)}
+                        className="w-full text-[13px] text-on-surface file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-[12px] file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer"
                      />
+                     {uploading && <p className="text-[11px] text-primary mt-1">Đang tải ảnh...</p>}
                   </div>
-               ))}
+                  {form.thumbnail && (
+                     <div className="w-16 h-16 rounded-lg overflow-hidden border border-surface-variant shrink-0 flex items-center justify-center bg-surface-container-low relative group">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={form.thumbnail} alt="thumb" className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                        <button onClick={() => set("thumbnail", "")} className="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center text-white"><X size={16}/></button>
+                     </div>
+                  )}
+               </div>
+
+               {/* Images Section */}
+               <div>
+                  <div className="flex items-center justify-between mb-2">
+                     <label className="block text-[12px] font-semibold text-on-surface">
+                        Ảnh chi tiết sản phẩm (Slider)
+                     </label>
+                     <button
+                        onClick={addImage}
+                        type="button"
+                        className="text-[11px] font-bold text-primary flex items-center gap-1 hover:underline"
+                     >
+                        <Plus size={12} /> Thêm ô upload
+                     </button>
+                  </div>
+                  <div className="space-y-2">
+                     {form.images.map((img, idx) => (
+                        <div key={idx} className="flex gap-2 items-center">
+                           <div className="flex-1 flex items-center">
+                              {img ? (
+                                 <div className="flex items-center gap-3 w-full bg-surface-container-lowest border border-surface-variant rounded-lg p-2">
+                                    <div className="w-12 h-12 rounded overflow-hidden bg-surface-container-low shrink-0">
+                                       {/* eslint-disable-next-line @next/next/no-img-element */}
+                                       <img src={img} alt="" className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                                    </div>
+                                    <span className="text-[11px] text-on-surface-variant truncate flex-1">{img}</span>
+                                    <button
+                                       onClick={() => removeImage(idx)}
+                                       className="p-1.5 text-on-surface-variant hover:text-error hover:bg-error-container/30 rounded"
+                                    >
+                                       <Trash2 size={14} />
+                                    </button>
+                                 </div>
+                              ) : (
+                                 <div className="flex-1 flex items-center gap-2">
+                                    <input
+                                       type="file"
+                                       accept="image/*"
+                                       onChange={(e) => uploadFile(e, false, idx)}
+                                       className="flex-1 text-[13px] text-on-surface file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-surface-variant file:text-on-surface-variant hover:file:bg-surface-variant/80 cursor-pointer"
+                                    />
+                                    <button
+                                       onClick={() => removeImage(idx)}
+                                       className="p-1.5 text-on-surface-variant hover:text-error hover:bg-error-container/30 rounded"
+                                    >
+                                       <Trash2 size={14} />
+                                    </button>
+                                 </div>
+                              )}
+                           </div>
+                        </div>
+                     ))}
+                     {form.images.length === 0 && (
+                        <p className="text-[12px] text-on-surface-variant italic">Chưa có ảnh chi tiết nào. Bấm "Thêm ô upload" để tải ảnh.</p>
+                     )}
+                     {uploading && <p className="text-[11px] text-primary mt-1">Đang tải ảnh...</p>}
+                  </div>
+               </div>
+
                <div className="grid grid-cols-2 gap-3">
                   {[
                      { label: "Giá (₫) *", key: "price" },
