@@ -70,3 +70,50 @@ npm run dev
 Truy cập `http://localhost:3000` để bắt đầu trải nghiệm!
 - **Tài khoản Admin:** `admin@shop.com` / Mật khẩu: `123456`
 - **Tài khoản User:** `user@shop.com` / Mật khẩu: `123456`
+
+---
+
+## 🐳 Hướng Dẫn Khởi Chạy Bằng Docker (Môi trường Production)
+
+Dự án đã được tích hợp sẵn `docker-compose.yml` hoàn chỉnh với các service: MySQL, Redis, Backend, Frontend và Nginx (Reverse Proxy).
+
+**Các bước thực hiện:**
+1. Tạo file `.env` cho thư mục `backend` và `frontend` dựa trên `.env.example` (hệ thống sẽ tự động sử dụng cấu hình này và đè lên một số biến quan trọng từ `docker-compose.yml` để các container nhận diện nhau).
+2. Tại thư mục gốc của dự án, chạy lệnh:
+```bash
+docker-compose up -d --build
+```
+3. Sau khi quá trình build hoàn tất, hệ thống sẽ chạy tại địa chỉ Nginx proxy: [http://localhost:8080](http://localhost:8080). (Tài khoản Admin/User vẫn như trên).
+
+*Lưu ý: Lần đầu tiên build có thể mất vài phút. Bạn không cần chạy lệnh migrate database thủ công vì `npx prisma db push` cần được chạy sau khi container database khởi động (hoặc bạn có thể truy cập vào bash của container backend).*
+
+---
+
+## 🚀 Hướng Dẫn Triển Khai (Deploy) Lên Internet
+
+Để deploy hệ thống lên một máy chủ thực tế (VD: VPS Ubuntu trên AWS, DigitalOcean, Linode,...), bạn có thể làm theo các bước sau:
+
+1. **Chuẩn bị Máy chủ:** 
+   - Đảm bảo máy chủ (VPS) đã được cài đặt sẵn **Docker** và **Docker Compose**.
+2. **Đưa Source code lên VPS:**
+   - Clone repository dự án về máy chủ.
+3. **Cấu hình Môi trường:**
+   - Sao chép `.env.example` thành `.env` trong cả 2 thư mục `backend` và `frontend`.
+   - Chỉnh sửa `backend/.env` bằng thông tin thực tế (thay thế Mật khẩu, API Keys).
+   - Ở `docker-compose.yml`, kiểm tra phần biến môi trường `ALLOWED_ORIGINS` của service `backend` và thay đổi `192.168.1.x` hoặc `localhost` thành IP Public/Domain của bạn. Tương tự, cập nhật `NEXT_PUBLIC_API_URL` ở service `frontend`.
+4. **Cấu hình Tên miền (Domain):**
+   - Trỏ bản ghi A/CNAME của tên miền về địa chỉ IP của VPS.
+   - Sửa cấu hình trong `nginx/nginx.conf`: Thay đổi `server_name localhost;` thành `server_name tenmiencuaban.com;`.
+5. **Khởi chạy Hệ thống:**
+   - Tại thư mục gốc, chạy lệnh:
+   ```bash
+   docker-compose up -d --build
+   ```
+6. **Khởi tạo dữ liệu (Lần đầu tiên):**
+   - Để khởi tạo bảng trong database MySQL qua Docker, bạn có thể chạy:
+   ```bash
+   docker exec -it shop-me-backend npx prisma db push
+   docker exec -it shop-me-backend npx tsx prisma/seed.ts
+   ```
+
+*Hệ thống mạng nội bộ (shop-me-network) của Docker đảm bảo tính bảo mật. Các ứng dụng bên ngoài không thể truy cập trực tiếp vào Database hay Redis, chúng chỉ có thể đi qua Nginx.*

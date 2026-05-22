@@ -1,3 +1,4 @@
+import DOMPurify from "isomorphic-dompurify";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -113,7 +114,7 @@ export default async function ArticleDetailPage(
                {/* Content — render HTML từ editor */}
                <div
                   className="prose prose-lg max-w-none text-on-surface prose-headings:text-on-surface prose-a:text-primary prose-strong:text-on-surface prose-img:rounded-lg mb-10"
-                  dangerouslySetInnerHTML={{ __html: article.content }}
+                  dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(article.content) }}
                />
 
                {/* Reaction */}

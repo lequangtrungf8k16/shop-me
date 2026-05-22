@@ -55,6 +55,20 @@ const httpServer = createServer(app);
 
 initSocket(httpServer);
 
+// Security middlewares
+app.use(helmet());
+app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" })); // Cho phép load ảnh từ /uploads cross-origin
+
+// Rate limiting
+const limiter = rateLimit({
+   windowMs: 15 * 60 * 1000, // 15 minutes
+   max: 1000, // Giới hạn 1000 request/15 phút/IP
+   message: "Quá nhiều yêu cầu từ IP này, vui lòng thử lại sau 15 phút",
+   standardHeaders: true,
+   legacyHeaders: false,
+});
+app.use("/api", limiter);
+
 app.use(corsMiddleware);
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
